@@ -43,3 +43,6 @@ impl Debug for SArcOpaque {
         write!(f, "{{SArcOpaque}}")
     }
 }
+
+unsafe impl Send for SArcOpaque {}
+unsafe impl Sync for SArcOpaque {}
