@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-/// Opaqua SArc for keeping the reference count
+/// Opaque SArc for keeping the reference count
 ///
-/// Basically the normal SArc, except it doesn't expose the inner type
+/// Basically the normal `SArc`, except it doesn't expose the inner type
 /// and has no way to access it.
 /// Useful when your inner type is not FFI-safe and you just want to
 /// keep track of references.
