@@ -8,7 +8,10 @@ use repr_c_types;
 #[test]
 fn ffi_safe() {
     extern "C" fn _test(
-        // Tuples
+        // Primitives
+        _: repr_c_types::SArray<u8, 5>,
+        _: repr_c_types::SStr<'static>,
+        // Primitives: Tuples
         _: repr_c_types::tuples::STuple2<u8, u8>,
         // std
         _: repr_c_types::std::option::SOption<u8>,
