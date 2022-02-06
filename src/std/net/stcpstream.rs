@@ -1,4 +1,11 @@
-use std::{marker::PhantomData, net::TcpStream, ops::Deref};
+use super::SSocketAddr;
+use std::io::Result;
+use std::{
+    marker::PhantomData,
+    net::{TcpStream, ToSocketAddrs},
+    ops::Deref,
+    time::Duration,
+};
 
 /// A TCP stream between a local and a remote socket.
 ///
@@ -47,6 +54,8 @@ impl Drop for STcpStreamOwned {
 
 impl STcpStreamOwned {
     /// Boxes the given TcpStream and constructs a `STcpStreamOwned`
+    ///
+    /// This operation is not reversible - you can never get the `TcpStream` back
     pub fn from_tcpstream(tcp_stream: TcpStream) -> Self {
         let ptr = Box::into_raw(Box::new(tcp_stream));
 
@@ -54,6 +63,17 @@ impl STcpStreamOwned {
             ptr: ptr as *const (),
             vtable: VTABLE,
         }
+    }
+    pub fn connect<A: ToSocketAddrs>(addr: A) -> Result<Self> {
+        TcpStream::connect(addr).map(|stream| Self::from_tcpstream(stream))
+    }
+    pub fn connect_timeout(addr: &SSocketAddr, timeout: Duration) {
+        // Make repr(C) Duration
+        todo!();
+    }
+    pub fn local_addr(&self) -> Result<SSocketAddr> {
+        todo!(); // gotta make repr(C) Result and io::Error
+                 // (self.vtable.local_addr)(self.ptr)
     }
 }
 
