@@ -1,3 +1,4 @@
+use super::option::SOption;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
@@ -52,19 +53,18 @@ impl<T, E> SResult<T, E> {
             Self::Err(e) => SResult::Err(e),
         }
     }
-    // TODO: SOption
-    // pub fn err(self) -> SOption<E> {
-    //     match self {
-    //         Self::Ok(_) => SOption::None,
-    //         Self::Err(e) => SOption::Some(e),
-    //     }
-    // }
-    // pub fn ok(self) -> SOption<T> {
-    //     match self {
-    //         Self::Ok(v) => SOption::Some(v),
-    //         Self::Err(_) => SOption::None,
-    //     }
-    // }
+    pub fn err(self) -> SOption<E> {
+        match self {
+            Self::Ok(_) => SOption::None,
+            Self::Err(e) => SOption::Some(e),
+        }
+    }
+    pub fn ok(self) -> SOption<T> {
+        match self {
+            Self::Ok(v) => SOption::Some(v),
+            Self::Err(_) => SOption::None,
+        }
+    }
     pub fn is_err(&self) -> bool {
         match self {
             Self::Ok(_) => false,
@@ -178,16 +178,15 @@ impl<T: Debug, E> SResult<T, E> {
     }
 }
 
-// TODO: SOption
-// impl<T, E> SResult<SOption<T>, E> {
-//     pub fn transpose(self) -> SOption<SResult<T, E>> {
-//         match self {
-//             Self::Ok(SOption::Some(x)) => SOption::Some(SResult::Ok(x)),
-//             Self::Ok(SOption::None) => SOption::None,
-//             Self::Err(e) => SOption::Some(SResult::Err(e)),
-//         }
-//     }
-// }
+impl<T, E> SResult<SOption<T>, E> {
+    pub fn transpose(self) -> SOption<SResult<T, E>> {
+        match self {
+            Self::Ok(SOption::Some(x)) => SOption::Some(SResult::Ok(x)),
+            Self::Ok(SOption::None) => SOption::None,
+            Self::Err(e) => SOption::Some(SResult::Err(e)),
+        }
+    }
+}
 
 impl<T, E> SResult<T, E>
 where

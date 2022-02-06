@@ -91,7 +91,7 @@ impl<'a> STcpStreamRef<'a> {
 #[repr(C)]
 struct VTable {
     // Only used on Owned variant
-    drop: unsafe fn(*const ()),
+    drop: unsafe extern "C" fn(*const ()),
 }
 
 unsafe impl<'a> Send for STcpStreamRef<'a> {}
@@ -100,7 +100,7 @@ unsafe impl<'a> Sync for STcpStreamRef<'a> {}
 unsafe impl Sync for STcpStreamOwned {}
 
 const VTABLE: VTable = {
-    unsafe fn drop(ptr: *const ()) {
+    unsafe extern "C" fn drop(ptr: *const ()) {
         unsafe {
             std::mem::drop(Box::from_raw(ptr as *mut TcpStream));
         }

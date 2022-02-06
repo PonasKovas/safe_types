@@ -10,7 +10,7 @@ use std::sync::Arc;
 #[repr(C)]
 pub struct SArcOpaque {
     raw: *const (),
-    drop: unsafe fn(*const ()),
+    drop: unsafe extern "C" fn(*const ()),
 }
 
 impl SArcOpaque {
@@ -18,7 +18,7 @@ impl SArcOpaque {
     pub fn new<T>(arc: Arc<T>) -> Self {
         let raw = Arc::into_raw(arc) as *const ();
 
-        unsafe fn drop<T>(raw: *const ()) {
+        unsafe extern "C" fn drop<T>(raw: *const ()) {
             unsafe {
                 Arc::from_raw(raw as *const T);
             }
