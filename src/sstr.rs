@@ -1,7 +1,7 @@
 use crate::SSlice;
 use std::ops::Deref;
 
-/// FFI-safe equivalent of a `&str`
+/// FFI-safe equivalent of `&str`
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SStr<'a> {

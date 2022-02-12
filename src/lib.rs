@@ -4,8 +4,9 @@ mod array;
 mod sslice;
 mod sstr;
 pub mod std;
-pub mod tuples;
+mod tuples;
 
 pub use array::SArray;
 pub use sslice::SSlice;
 pub use sstr::SStr;
+pub use tuples::*;

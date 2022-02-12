@@ -1,8 +1,6 @@
-use std::ops::{Deref, DerefMut};
-
-use crate::tuples::STuple2;
-
 use super::result::SResult;
+use crate::tuples::STuple2;
+use std::ops::{Deref, DerefMut};
 
 /// The `Option` type.
 ///
