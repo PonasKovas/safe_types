@@ -1,12 +1,16 @@
+use crate::PhantomType;
+
 #[repr(C)]
 pub struct SBox<T> {
     ptr: *mut T,
+    _phantom: PhantomType<T>,
 }
 
 impl<T> SBox<T> {
     pub fn from_box(b: Box<T>) -> Self {
         Self {
             ptr: Box::into_raw(b),
+            _phantom: PhantomType::new(),
         }
     }
     pub fn into_box(self) -> Box<T> {

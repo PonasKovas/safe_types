@@ -1,6 +1,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 mod array;
+mod phantom_type;
 mod sslice;
 mod sstr;
 pub mod std;
@@ -10,6 +11,8 @@ pub use array::SArray;
 pub use sslice::{SMutSlice, SSlice};
 pub use sstr::SStr;
 pub use tuples::*;
+
+pub(crate) use phantom_type::PhantomType;
 
 use ::std::{
     marker::PhantomData,

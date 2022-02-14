@@ -1,3 +1,4 @@
+use crate::PhantomType;
 use std::ops::{Deref, DerefMut};
 
 /// FFI-safe equivalent of `&[T]`
@@ -6,6 +7,9 @@ use std::ops::{Deref, DerefMut};
 pub struct SSlice<'a, T> {
     ptr: &'a T,
     length: usize,
+    // So the compiler would trigger the improper_ctypes_definitions lint
+    // if T is not FFI-safe
+    _phantom: PhantomType<T>,
 }
 
 /// FFI-safe equivalent of `&mut [T]`
@@ -13,6 +17,9 @@ pub struct SSlice<'a, T> {
 pub struct SMutSlice<'a, T> {
     ptr: &'a T,
     length: usize,
+    // So the compiler would trigger the improper_ctypes_definitions lint
+    // if T is not FFI-safe
+    _phantom: PhantomType<T>,
 }
 
 impl<'a, T> SSlice<'a, T> {
@@ -20,6 +27,7 @@ impl<'a, T> SSlice<'a, T> {
         Self {
             ptr: unsafe { slice.as_ptr().as_ref().unwrap_unchecked() },
             length: slice.len(),
+            _phantom: PhantomType::new(),
         }
     }
     pub fn as_slice(&self) -> &'a [T] {
@@ -40,6 +48,7 @@ impl<'a, T> SMutSlice<'a, T> {
         Self {
             ptr: unsafe { slice.as_ptr().as_ref().unwrap_unchecked() },
             length: slice.len(),
+            _phantom: PhantomType::new(),
         }
     }
     pub fn as_slice(&self) -> &'a mut [T] {

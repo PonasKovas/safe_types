@@ -1,4 +1,4 @@
-use crate::{Immutable, Mutable, SSlice};
+use crate::{Immutable, Mutable, PhantomType, SSlice};
 use core::slice;
 use safe_types_derive::impl_methods;
 use std::{
@@ -15,6 +15,9 @@ pub struct SVec<T> {
     ptr: *mut T,
     length: usize,
     capacity: usize,
+    // So the compiler would trigger the improper_ctypes_definitions lint
+    // if T is not FFI-safe
+    _phantom: PhantomType<T>,
 }
 
 impl<T> SVec<T> {
@@ -23,6 +26,7 @@ impl<T> SVec<T> {
             ptr: v.as_mut_ptr(),
             length: v.len(),
             capacity: v.capacity(),
+            _phantom: PhantomType::new(),
         };
 
         forget(v);
@@ -114,4 +118,15 @@ impl<T: Clone> SVec<T> {
         fn extend_from_within<R>(&mut self, src: R) where R: ::std::ops::RangeBounds<usize>;
         fn resize(&mut self, new_len: usize, value: T);
     ]);
+}
+
+impl<T> From<Vec<T>> for SVec<T> {
+    fn from(v: Vec<T>) -> Self {
+        Self::from_vec(v)
+    }
+}
+impl<T> From<SVec<T>> for Vec<T> {
+    fn from(v: SVec<T>) -> Self {
+        v.into_vec()
+    }
 }
