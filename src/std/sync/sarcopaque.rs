@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::sync::Arc;
 
 /// Opaque SArc for keeping the reference count
@@ -39,6 +39,12 @@ impl Drop for SArcOpaque {
 }
 
 impl Debug for SArcOpaque {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{SArcOpaque}}")
+    }
+}
+
+impl Display for SArcOpaque {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{SArcOpaque}}")
     }
