@@ -1,8 +1,10 @@
-use crate::PhantomType;
+use crate::{Immutable, Mutable, PhantomType};
 
 #[repr(C)]
 pub struct SBox<T> {
     ptr: *mut T,
+    // Used so the compiler would trigger the improper_ctypes_definitions lint
+    // if T is not FFI-safe
     _phantom: PhantomType<T>,
 }
 
@@ -15,6 +17,12 @@ impl<T> SBox<T> {
     }
     pub fn into_box(self) -> Box<T> {
         unsafe { Box::from_raw(self.ptr) }
+    }
+    pub fn as_box<'a>(&'a self) -> Immutable<'a, Box<T>> {
+        Immutable::new(unsafe { Box::from_raw(self.ptr) })
+    }
+    pub fn as_box_mut<'a>(&'a mut self) -> Mutable<'a, Self, Box<T>> {
+        Mutable::new(unsafe { std::ptr::read(self).into_box() }, self)
     }
 }
 

@@ -5,6 +5,9 @@ use std::{
     str::FromStr,
 };
 
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
+
 /// An IPv4 address.
 ///
 /// See documentation of [`std::net::Ipv4Addr`]
@@ -39,42 +42,22 @@ impl SIpv4Addr {
     pub const fn as_ipv4addr(self) -> Ipv4Addr {
         Ipv4Addr::new(self.a, self.b, self.c, self.d)
     }
-    pub const fn octets(&self) -> [u8; 4] {
-        self.as_ipv4addr().octets()
-    }
-    pub const fn is_broadcast(&self) -> bool {
-        self.as_ipv4addr().is_broadcast()
-    }
-    pub const fn is_documentation(&self) -> bool {
-        self.as_ipv4addr().is_documentation()
-    }
-    pub const fn is_link_local(&self) -> bool {
-        self.as_ipv4addr().is_link_local()
-    }
-    pub const fn is_loopback(&self) -> bool {
-        self.as_ipv4addr().is_loopback()
-    }
-    pub const fn is_multicast(&self) -> bool {
-        self.as_ipv4addr().is_multicast()
-    }
-    pub const fn is_private(&self) -> bool {
-        self.as_ipv4addr().is_private()
-    }
-    pub const fn is_unspecified(&self) -> bool {
-        self.as_ipv4addr().is_unspecified()
-    }
-    pub const fn to_ipv6_compatible(&self) -> Ipv6Addr {
-        self.as_ipv4addr().to_ipv6_compatible()
-    }
-    pub const fn to_sipv6_compatible(&self) -> SIpv6Addr {
-        SIpv6Addr::from_ipv6addr(&self.as_ipv4addr().to_ipv6_compatible())
-    }
-    pub const fn to_ipv6_mapped(&self) -> Ipv6Addr {
-        self.as_ipv4addr().to_ipv6_mapped()
-    }
-    pub const fn to_sipv6_mapped(&self) -> SIpv6Addr {
-        SIpv6Addr::from_ipv6addr(&self.as_ipv4addr().to_ipv6_mapped())
-    }
+}
+
+#[cfg(feature = "convenient_methods")]
+impl SIpv4Addr {
+    impl_methods!(as_ipv4addr, as_ipv4addr, as_ipv4addr, [
+        const fn octets(&self) -> [u8; 4];
+        const fn is_broadcast(&self) -> bool;
+        const fn is_documentation(&self) -> bool;
+        const fn is_link_local(&self) -> bool;
+        const fn is_loopback(&self) -> bool;
+        const fn is_multicast(&self) -> bool;
+        const fn is_private(&self) -> bool;
+        const fn is_unspecified(&self) -> bool;
+        const fn to_ipv6_compatible(&self) -> Ipv6Addr;
+        const fn to_ipv6_mapped(&self) -> Ipv6Addr;
+    ]);
 }
 
 impl From<Ipv4Addr> for SIpv4Addr {

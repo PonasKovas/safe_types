@@ -1,9 +1,13 @@
 use super::SIpv4Addr;
+use crate::{Immutable, Mutable};
 use std::{
     fmt::Display,
-    net::{SocketAddrV4, ToSocketAddrs},
+    net::{Ipv4Addr, SocketAddrV4, ToSocketAddrs},
     str::FromStr,
 };
+
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
 
 /// An IPv4 socket address.
 ///
@@ -25,18 +29,20 @@ impl SSocketAddrV4 {
     pub fn as_socketaddrv4(&self) -> SocketAddrV4 {
         SocketAddrV4::new(self.ip.as_ipv4addr(), self.port)
     }
-    pub fn ip(&self) -> &SIpv4Addr {
-        &self.ip
+    pub fn as_socketaddrv4_mut<'a>(&'a mut self) -> Mutable<'a, Self, SocketAddrV4> {
+        Mutable::new_from(self)
     }
-    pub fn port(&self) -> u16 {
-        self.port
+    pub fn ip<'a>(&'a self) -> Immutable<'a, Ipv4Addr> {
+        Immutable::new(*self.as_socketaddrv4().ip())
     }
-    pub fn set_ip(&mut self, new_ip: SIpv4Addr) {
-        self.ip = new_ip;
-    }
-    pub fn set_port(&mut self, new_port: u16) {
-        self.port = new_port;
-    }
+}
+#[cfg(feature = "convenient_methods")]
+impl SSocketAddrV4 {
+    impl_methods!(as_socketaddrv4, as_socketaddrv4, as_socketaddrv4_mut, [
+        fn port(&self) -> u16;
+        fn set_ip(&mut self, new_ip: Ipv4Addr);
+        fn set_port(&mut self, new_port: u16);
+    ]);
 }
 
 impl Display for SSocketAddrV4 {

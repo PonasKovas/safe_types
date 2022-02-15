@@ -1,9 +1,14 @@
+use crate::{Immutable, Mutable};
+
 use super::SIpv6Addr;
 use std::{
     fmt::Display,
-    net::{SocketAddrV6, ToSocketAddrs},
+    net::{Ipv6Addr, SocketAddrV6, ToSocketAddrs},
     str::FromStr,
 };
+
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
 
 /// An IPv6 socket address.
 ///
@@ -34,12 +39,11 @@ impl SSocketAddrV6 {
             self.scope_id,
         )
     }
-
-    pub fn flowinfo(&self) -> u32 {
-        self.as_socketaddrv6().flowinfo()
+    pub fn as_socketaddrv6_mut<'a>(&'a mut self) -> Mutable<'a, Self, SocketAddrV6> {
+        Mutable::new_from(self)
     }
-    pub fn ip(&self) -> &SIpv6Addr {
-        &self.ip
+    pub fn ip<'a>(&'a self) -> Immutable<'a, Ipv6Addr> {
+        Immutable::new(*self.as_socketaddrv6().ip())
     }
     pub fn new(ip: SIpv6Addr, port: u16, flowinfo: u32, scope_id: u32) -> Self {
         Self {
@@ -49,24 +53,19 @@ impl SSocketAddrV6 {
             scope_id,
         }
     }
-    pub fn port(&self) -> u16 {
-        self.port
-    }
-    pub fn scope_id(&self) -> u32 {
-        self.scope_id
-    }
-    pub fn set_flowinfo(&mut self, new_flowinfo: u32) {
-        self.flowinfo = new_flowinfo;
-    }
-    pub fn set_ip(&mut self, new_ip: SIpv6Addr) {
-        self.ip = new_ip;
-    }
-    pub fn set_port(&mut self, new_port: u16) {
-        self.port = new_port;
-    }
-    pub fn set_scope_id(&mut self, new_scope_id: u32) {
-        self.scope_id = new_scope_id;
-    }
+}
+
+#[cfg(feature = "convenient_methods")]
+impl SSocketAddrV6 {
+    impl_methods!(as_socketaddrv6, as_socketaddrv6, as_socketaddrv6_mut, [
+        fn flowinfo(&self) -> u32;
+        fn port(&self) -> u16;
+        fn scope_id(&self) -> u32;
+        fn set_flowinfo(&mut self, new_flowinfo: u32);
+        fn set_ip(&mut self, new_ip: Ipv6Addr);
+        fn set_port(&mut self, new_port: u16);
+        fn set_scope_id(&mut self, new_scope_id: u32);
+    ]);
 }
 
 impl Display for SSocketAddrV6 {

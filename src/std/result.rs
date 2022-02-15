@@ -1,6 +1,10 @@
 use super::option::SOption;
+use crate::{Immutable, Mutable};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
+
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
 
 /// `SResult` is a type that represents either success ([`Ok`](SResult::Ok)) or failure ([`Err`](SResult::Err)).
 ///
@@ -25,140 +29,53 @@ impl<T, E> SResult<T, E> {
             Self::Err(v) => Err(v),
         }
     }
-
-    pub fn and<U>(self, other: SResult<U, E>) -> SResult<U, E> {
+    pub fn as_result<'a>(&'a self) -> Immutable<'a, Result<T, E>> {
+        Immutable::new(unsafe { std::ptr::read(self) }.into_result())
+    }
+    pub fn as_result_mut<'a>(&'a mut self) -> Mutable<'a, Self, Result<T, E>> {
+        Mutable::new_from(self)
+    }
+    pub fn as_mut(&mut self) -> Result<&mut T, &mut E> {
         match self {
-            Self::Ok(_) => other,
-            Self::Err(e) => SResult::Err(e),
+            Self::Ok(v) => Result::Ok(v),
+            Self::Err(e) => Result::Err(e),
         }
     }
-    pub fn and_then<U, F>(self, op: F) -> SResult<U, E>
-    where
-        F: FnOnce(T) -> SResult<U, E>,
-    {
+    pub fn as_ref(&self) -> Result<&T, &E> {
         match self {
-            Self::Ok(v) => op(v),
-            Self::Err(e) => SResult::Err(e),
-        }
-    }
-    pub fn as_mut(&mut self) -> SResult<&mut T, &mut E> {
-        match self {
-            Self::Ok(v) => SResult::Ok(v),
-            Self::Err(e) => SResult::Err(e),
-        }
-    }
-    pub fn as_ref(&self) -> SResult<&T, &E> {
-        match self {
-            Self::Ok(v) => SResult::Ok(v),
-            Self::Err(e) => SResult::Err(e),
-        }
-    }
-    pub fn err(self) -> SOption<E> {
-        match self {
-            Self::Ok(_) => SOption::None,
-            Self::Err(e) => SOption::Some(e),
-        }
-    }
-    pub fn ok(self) -> SOption<T> {
-        match self {
-            Self::Ok(v) => SOption::Some(v),
-            Self::Err(_) => SOption::None,
-        }
-    }
-    pub fn is_err(&self) -> bool {
-        match self {
-            Self::Ok(_) => false,
-            Self::Err(_) => true,
-        }
-    }
-    pub fn is_ok(&self) -> bool {
-        match self {
-            Self::Ok(_) => true,
-            Self::Err(_) => false,
-        }
-    }
-    pub fn map<U, F>(self, op: F) -> SResult<U, E>
-    where
-        F: FnOnce(T) -> U,
-    {
-        match self {
-            Self::Ok(v) => SResult::Ok(op(v)),
-            Self::Err(e) => SResult::Err(e),
-        }
-    }
-    pub fn map_err<U, F>(self, op: F) -> SResult<T, U>
-    where
-        F: FnOnce(E) -> U,
-    {
-        match self {
-            Self::Ok(v) => SResult::Ok(v),
-            Self::Err(e) => SResult::Err(op(e)),
-        }
-    }
-    pub fn map_or<U, F>(self, default: U, op: F) -> U
-    where
-        F: FnOnce(T) -> U,
-    {
-        match self {
-            Self::Ok(v) => op(v),
-            Self::Err(_) => default,
-        }
-    }
-    pub fn map_or_else<U, F, G>(self, err_op: G, ok_op: F) -> U
-    where
-        F: FnOnce(T) -> U,
-        G: FnOnce(E) -> U,
-    {
-        match self {
-            Self::Ok(v) => ok_op(v),
-            Self::Err(e) => err_op(e),
-        }
-    }
-    pub fn or<F>(self, other: SResult<T, F>) -> SResult<T, F> {
-        match self {
-            Self::Ok(v) => SResult::Ok(v),
-            Self::Err(_) => other,
-        }
-    }
-    pub fn or_else<F, O>(self, op: O) -> SResult<T, F>
-    where
-        O: FnOnce(E) -> SResult<T, F>,
-    {
-        match self {
-            Self::Ok(v) => SResult::Ok(v),
-            Self::Err(e) => op(e),
-        }
-    }
-    pub unsafe fn unwrap_unchecked(self) -> T {
-        unsafe { self.into_result().unwrap_unchecked() }
-    }
-    pub unsafe fn unwrap_err_unchecked(self) -> E {
-        unsafe { self.into_result().unwrap_err_unchecked() }
-    }
-    pub fn unwrap_or(self, default: T) -> T {
-        match self {
-            Self::Ok(v) => v,
-            Self::Err(_) => default,
-        }
-    }
-    pub fn unwrap_or_else<F>(self, op: F) -> T
-    where
-        F: FnOnce(E) -> T,
-    {
-        match self {
-            Self::Ok(v) => v,
-            Self::Err(e) => op(e),
+            Self::Ok(v) => Result::Ok(v),
+            Self::Err(e) => Result::Err(e),
         }
     }
 }
 
+#[cfg(feature = "convenient_methods")]
+impl<T, E> SResult<T, E> {
+    impl_methods!(into_result, as_result, as_result_mut, [
+        fn and<U>(self, other: Result<U, E>) -> Result<U, E>;
+        fn and_then<U, F>(self, op: F) -> Result<U, E> where F: FnOnce(T) -> Result<U, E>;
+        fn err(self) -> Option<E>;
+        fn ok(self) -> Option<T>;
+        fn is_err(&self) -> bool;
+        fn is_ok(&self) -> bool;
+        fn map<U, F>(self, op: F) -> Result<U, E> where F: FnOnce(T) -> U;
+        fn map_err<U, F>(self, op: F) -> Result<T, U> where F: FnOnce(E) -> U;
+        fn map_or<U, F>(self, default: U, op: F) -> U where F: FnOnce(T) -> U;
+        fn map_or_else<U, F, G>(self, err_op: G, ok_op: F) -> U where F: FnOnce(T) -> U, G: FnOnce(E) -> U;
+        fn or<F>(self, other: Result<T, F>) -> Result<T, F>;
+        fn or_else<F, O>(self, op: O) -> Result<T, F> where O: FnOnce(E) -> Result<T, F>;
+        unsafe fn unwrap_unchecked(self) -> T;
+        unsafe fn unwrap_err_unchecked(self) -> E;
+        fn unwrap_or(self, default: T) -> T;
+        fn unwrap_or_else<F>(self, op: F) -> T where F: FnOnce(E) -> T;
+    ]);
+}
+
+#[cfg(feature = "convenient_methods")]
 impl<T: Default, E> SResult<T, E> {
-    pub fn unwrap_or_default(self) -> T {
-        match self {
-            Self::Ok(v) => v,
-            Self::Err(_) => Default::default(),
-        }
-    }
+    impl_methods!(into_result, as_result, as_result_mut, [
+        fn unwrap_or_default(self) -> T;
+    ]);
 }
 
 impl<T, E: Debug> SResult<T, E> {

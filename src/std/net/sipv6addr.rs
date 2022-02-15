@@ -5,6 +5,9 @@ use std::{
     str::FromStr,
 };
 
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
+
 /// An IPv6 address.
 ///
 /// See documentation of [`std::net::Ipv6Addr`]
@@ -56,24 +59,18 @@ impl SIpv6Addr {
             self.a, self.b, self.c, self.d, self.e, self.f, self.g, self.h,
         )
     }
-    pub const fn segments(&self) -> [u16; 8] {
-        self.as_ipv6addr().segments()
-    }
-    pub const fn octets(&self) -> [u8; 16] {
-        self.as_ipv6addr().octets()
-    }
-    pub const fn is_loopback(&self) -> bool {
-        self.as_ipv6addr().is_loopback()
-    }
-    pub const fn is_multicast(&self) -> bool {
-        self.as_ipv6addr().is_multicast()
-    }
-    pub const fn is_unspecified(&self) -> bool {
-        self.as_ipv6addr().is_unspecified()
-    }
-    pub const fn to_ipv4(&self) -> Option<Ipv4Addr> {
-        self.as_ipv6addr().to_ipv4()
-    }
+}
+
+#[cfg(feature = "convenient_methods")]
+impl SIpv6Addr {
+    impl_methods!(as_ipv6addr, as_ipv6addr, as_ipv6addr, [
+        const fn segments(&self) -> [u16; 8];
+        const fn octets(&self) -> [u8; 16];
+        const fn is_loopback(&self) -> bool;
+        const fn is_multicast(&self) -> bool;
+        const fn is_unspecified(&self) -> bool;
+        const fn to_ipv4(&self) -> Option<Ipv4Addr>;
+    ]);
 }
 
 impl Display for SIpv6Addr {

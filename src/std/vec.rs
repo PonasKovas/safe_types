@@ -1,11 +1,12 @@
-use crate::{Immutable, Mutable, PhantomType, SSlice};
+use crate::{Immutable, Mutable, PhantomType};
 use core::slice;
-use safe_types_derive::impl_methods;
 use std::{
     marker::PhantomData,
     mem::{forget, ManuallyDrop},
-    ops::{Deref, DerefMut},
 };
+
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
 
 /// FFI-safe equivalent of `Vec<T>`
 ///
@@ -41,20 +42,10 @@ impl<T> SVec<T> {
         r
     }
     pub fn as_vec<'a>(&'a self) -> Immutable<'a, Vec<T>> {
-        Immutable {
-            inner: ManuallyDrop::new(unsafe {
-                Vec::from_raw_parts(self.ptr, self.length, self.capacity)
-            }),
-            _phantom: PhantomData,
-        }
+        Immutable::new(unsafe { Vec::from_raw_parts(self.ptr, self.length, self.capacity) })
     }
-    pub fn as_vec_mut<'a>(&'a mut self) -> Mutable<'a, Vec<T>> {
-        Mutable {
-            inner: ManuallyDrop::new(unsafe {
-                Vec::from_raw_parts(self.ptr, self.length, self.capacity)
-            }),
-            _phantom: PhantomData,
-        }
+    pub fn as_vec_mut<'a>(&'a mut self) -> Mutable<'a, SVec<T>, Vec<T>> {
+        Mutable::new_from(self)
     }
 }
 
@@ -79,6 +70,7 @@ impl<T> SVec<T> {
     }
 }
 
+#[cfg(feature = "convenient_methods")]
 impl<T> SVec<T> {
     impl_methods!(into_vec, as_vec, as_vec_mut, [
 		fn append(&mut self, other: &mut Vec<T>);
@@ -107,11 +99,13 @@ impl<T> SVec<T> {
 		fn try_reserve_exact(&mut self, additional: usize) -> Result<(), ::std::collections::TryReserveError>;
 	]);
 }
+#[cfg(feature = "convenient_methods")]
 impl<T: PartialEq<T>> SVec<T> {
     impl_methods!(into_vec, as_vec, as_vec_mut, [
         fn dedup(&mut self);
     ]);
 }
+#[cfg(feature = "convenient_methods")]
 impl<T: Clone> SVec<T> {
     impl_methods!(into_vec, as_vec, as_vec_mut, [
         fn extend_from_slice(&mut self, other: &[T]);

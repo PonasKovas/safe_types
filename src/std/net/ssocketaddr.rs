@@ -1,8 +1,12 @@
 use super::{SIpAddr, SSocketAddrV4, SSocketAddrV6};
+use crate::Mutable;
 use std::{
     net::{IpAddr, SocketAddr, SocketAddrV4, SocketAddrV6, ToSocketAddrs},
     str::FromStr,
 };
+
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
 
 /// An internet socket address, either IPv4 or IPv6.
 ///
@@ -27,36 +31,23 @@ impl SSocketAddr {
             Self::V6(v) => SocketAddr::V6(v.as_socketaddrv6()),
         }
     }
-
+    pub fn as_socketaddr_mut<'a>(&'a mut self) -> Mutable<'a, SSocketAddr, SocketAddr> {
+        Mutable::new_from(self)
+    }
     pub fn new(ip: SIpAddr, port: u16) -> Self {
         Self::from_socketaddr(&SocketAddr::new(ip.as_ipaddr(), port))
     }
-    pub fn ip(&self) -> SIpAddr {
-        SIpAddr::from_ipaddr(&self.as_socketaddr().ip())
-    }
-    pub fn is_ipv4(&self) -> bool {
-        self.as_socketaddr().is_ipv4()
-    }
-    pub fn is_ipv6(&self) -> bool {
-        self.as_socketaddr().is_ipv6()
-    }
-    pub fn port(&self) -> u16 {
-        self.as_socketaddr().port()
-    }
-    pub fn set_ip(&mut self, new_ip: SIpAddr) {
-        *self = Self::from_socketaddr(&{
-            let mut temp = self.as_socketaddr();
-            temp.set_ip(new_ip.as_ipaddr());
-            temp
-        });
-    }
-    pub fn set_port(&mut self, new_port: u16) {
-        *self = Self::from_socketaddr(&{
-            let mut temp = self.as_socketaddr();
-            temp.set_port(new_port);
-            temp
-        });
-    }
+}
+#[cfg(feature = "convenient_methods")]
+impl SSocketAddr {
+    impl_methods!(as_socketaddr, as_socketaddr, as_socketaddr_mut, [
+        fn ip(&self) -> IpAddr;
+        fn is_ipv4(&self) -> bool;
+        fn is_ipv6(&self) -> bool;
+        fn port(&self) -> u16;
+        fn set_ip(&mut self, new_ip: IpAddr);
+        fn set_port(&mut self, new_port: u16);
+    ]);
 }
 
 impl From<SocketAddr> for SSocketAddr {

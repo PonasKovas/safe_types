@@ -2,11 +2,13 @@ use crate::SSlice;
 use std::ops::Deref;
 
 /// FFI-safe equivalent of `&str`
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct SStr<'a> {
     inner: SSlice<'a, u8>,
 }
+
+// TODO &mut str
 
 impl<'a> SStr<'a> {
     pub fn from_str(s: &str) -> Self {

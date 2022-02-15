@@ -5,6 +5,9 @@ use std::{
     str::FromStr,
 };
 
+#[cfg(feature = "convenient_methods")]
+use safe_types_derive::impl_methods;
+
 /// An IP address, either IPv4 or IPv6.
 ///
 /// See documentation of [`std::net::IpAddr`]
@@ -28,21 +31,16 @@ impl SIpAddr {
             Self::V6(v) => IpAddr::V6(v.as_ipv6addr()),
         }
     }
-    pub const fn is_ipv4(&self) -> bool {
-        self.as_ipaddr().is_ipv4()
-    }
-    pub const fn is_ipv6(&self) -> bool {
-        self.as_ipaddr().is_ipv6()
-    }
-    pub const fn is_loopback(&self) -> bool {
-        self.as_ipaddr().is_loopback()
-    }
-    pub const fn is_multicast(&self) -> bool {
-        self.as_ipaddr().is_multicast()
-    }
-    pub const fn is_unspecified(&self) -> bool {
-        self.as_ipaddr().is_unspecified()
-    }
+}
+#[cfg(feature = "convenient_methods")]
+impl SIpAddr {
+    impl_methods!(as_ipaddr, as_ipaddr, as_ipaddr, [
+        const fn is_ipv4(&self) -> bool;
+        const fn is_ipv6(&self) -> bool;
+        const fn is_loopback(&self) -> bool;
+        const fn is_multicast(&self) -> bool;
+        const fn is_unspecified(&self) -> bool;
+    ]);
 }
 
 impl Display for SIpAddr {

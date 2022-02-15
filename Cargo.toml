@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-safe_types_derive = { path = "safe_types_derive/" }
+safe_types_derive = { path = "safe_types_derive/", optional = true }
 
 [workspace]
+
+[features]
+default = ["convenient_methods"]
+convenient_methods = ["safe_types_derive"]
