@@ -1,5 +1,5 @@
-use crate::SSlice;
-use std::ops::Deref;
+use crate::{SMutSlice, SSlice};
+use std::ops::{Deref, DerefMut};
 
 /// FFI-safe equivalent of `&str`
 #[derive(Clone)]
@@ -8,10 +8,14 @@ pub struct SStr<'a> {
     inner: SSlice<'a, u8>,
 }
 
-// TODO &mut str
+/// FFI-safe equivalent of `&mut str`
+#[repr(C)]
+pub struct SMutStr<'a> {
+    inner: SMutSlice<'a, u8>,
+}
 
 impl<'a> SStr<'a> {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_str(s: &'a str) -> Self {
         Self {
             inner: SSlice::from_slice(s.as_bytes()),
         }
@@ -21,11 +25,42 @@ impl<'a> SStr<'a> {
     }
 }
 
+impl<'a> SMutStr<'a> {
+    pub fn from_str(s: &'a mut str) -> Self {
+        Self {
+            inner: SMutSlice::from_slice(unsafe { s.as_bytes_mut() }),
+        }
+    }
+    pub fn into_str(self) -> &'a mut str {
+        unsafe { std::str::from_utf8_unchecked_mut(self.inner.into_slice()) }
+    }
+    pub fn as_str<'b>(&'b self) -> &'b str {
+        unsafe { &std::str::from_utf8_unchecked(self.inner.as_slice()) }
+    }
+    pub fn as_str_mut<'b>(&'b mut self) -> &'b mut str {
+        unsafe { std::str::from_utf8_unchecked_mut(self.inner.as_slice_mut()) }
+    }
+}
+
 impl<'a> Deref for SStr<'a> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
         self.as_str()
+    }
+}
+
+impl<'a> Deref for SMutStr<'a> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
+}
+
+impl<'a> DerefMut for SMutStr<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_str_mut()
     }
 }
 

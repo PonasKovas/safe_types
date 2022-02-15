@@ -11,7 +11,10 @@ mod tuples;
 pub use array::SArray;
 pub use refs::{Immutable, Mutable};
 pub use sslice::{SMutSlice, SSlice};
-pub use sstr::SStr;
+pub use sstr::{SMutStr, SStr};
 pub use tuples::*;
 
 pub(crate) use phantom_type::PhantomType;
+
+/// This will increase when incompatible ABI changes are made.
+pub const ABI_VERSION: u32 = 0;
