@@ -1,9 +1,6 @@
 use crate::{Immutable, Mutable, PhantomType};
 use core::slice;
-use std::{
-    marker::PhantomData,
-    mem::{forget, ManuallyDrop},
-};
+use std::mem::forget;
 
 #[cfg(feature = "convenient_methods")]
 use safe_types_derive::impl_methods;
