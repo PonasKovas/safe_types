@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Display};
+
 use crate::{std::prelude::SVec, Immutable, Mutable};
 
 #[cfg(feature = "convenient_methods")]
@@ -21,13 +23,7 @@ impl SString {
         unsafe { String::from_utf8_unchecked(self.inner.into_vec()) }
     }
     pub fn as_string<'a>(&'a self) -> Immutable<'a, String> {
-        Immutable::new(unsafe {
-            String::from_raw_parts(
-                self.inner.as_ptr() as *mut _,
-                self.inner.len(),
-                self.inner.capacity(),
-            )
-        })
+        Immutable::new_from(self)
     }
     pub fn as_string_mut<'a>(&'a mut self) -> Mutable<'a, Self, String> {
         Mutable::new_from(self)
@@ -74,3 +70,17 @@ impl From<SString> for String {
         s.into_string()
     }
 }
+
+impl Display for SString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&*self.as_string(), f)
+    }
+}
+
+impl Debug for SString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&*self.as_string(), f)
+    }
+}
+
+// TODO traits

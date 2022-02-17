@@ -30,7 +30,7 @@ impl<T, E> SResult<T, E> {
         }
     }
     pub fn as_result<'a>(&'a self) -> Immutable<'a, Result<T, E>> {
-        Immutable::new(unsafe { std::ptr::read(self) }.into_result())
+        Immutable::new_from(self)
     }
     pub fn as_result_mut<'a>(&'a mut self) -> Mutable<'a, Self, Result<T, E>> {
         Mutable::new_from(self)

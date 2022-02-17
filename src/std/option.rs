@@ -29,7 +29,7 @@ impl<T> SOption<T> {
         }
     }
     pub fn as_option<'a>(&'a self) -> Immutable<'a, Option<T>> {
-        Immutable::new(unsafe { std::ptr::read(self) }.into_option())
+        Immutable::new_from(self)
     }
     pub fn as_option_mut<'a>(&'a mut self) -> Mutable<'a, Self, Option<T>> {
         Mutable::new_from(self)

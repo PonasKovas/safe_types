@@ -34,6 +34,9 @@ impl<'a, T> Immutable<'a, T> {
             _phantom: PhantomData,
         }
     }
+    pub fn new_from<O: Into<T>>(original: &'a O) -> Self {
+        Self::new(unsafe { std::ptr::read(original) }.into())
+    }
 }
 
 impl<'a, O, T: Into<O>> Deref for Mutable<'a, O, T> {

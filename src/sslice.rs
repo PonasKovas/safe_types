@@ -155,4 +155,9 @@ where
     }
 }
 
+unsafe impl<'a, T> Send for SSlice<'a, T> {}
+unsafe impl<'a, T> Sync for SSlice<'a, T> {}
+unsafe impl<'a, T> Send for SMutSlice<'a, T> {}
+unsafe impl<'a, T> Sync for SMutSlice<'a, T> {}
+
 // TODO more trait impls

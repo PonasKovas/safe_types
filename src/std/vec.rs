@@ -39,7 +39,7 @@ impl<T> SVec<T> {
         r
     }
     pub fn as_vec<'a>(&'a self) -> Immutable<'a, Vec<T>> {
-        Immutable::new(unsafe { Vec::from_raw_parts(self.ptr, self.length, self.capacity) })
+        Immutable::new_from(self)
     }
     pub fn as_vec_mut<'a>(&'a mut self) -> Mutable<'a, SVec<T>, Vec<T>> {
         Mutable::new_from(self)
@@ -121,3 +121,6 @@ impl<T> From<SVec<T>> for Vec<T> {
         v.into_vec()
     }
 }
+
+unsafe impl<T> Send for SVec<T> {}
+unsafe impl<T> Sync for SVec<T> {}

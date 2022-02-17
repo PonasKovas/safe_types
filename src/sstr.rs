@@ -1,5 +1,8 @@
 use crate::{SMutSlice, SSlice};
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt::{Debug, Display},
+    ops::{Deref, DerefMut},
+};
 
 /// FFI-safe equivalent of `&str`
 #[derive(Clone)]
@@ -61,6 +64,30 @@ impl<'a> Deref for SMutStr<'a> {
 impl<'a> DerefMut for SMutStr<'a> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_str_mut()
+    }
+}
+
+impl<'a> Display for SStr<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self.as_str(), f)
+    }
+}
+
+impl<'a> Display for SMutStr<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self.as_str(), f)
+    }
+}
+
+impl<'a> Debug for SStr<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.as_str(), f)
+    }
+}
+
+impl<'a> Debug for SMutStr<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.as_str(), f)
     }
 }
 

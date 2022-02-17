@@ -32,8 +32,8 @@ impl SSocketAddrV4 {
     pub fn as_socketaddrv4_mut<'a>(&'a mut self) -> Mutable<'a, Self, SocketAddrV4> {
         Mutable::new_from(self)
     }
-    pub fn ip<'a>(&'a self) -> Immutable<'a, Ipv4Addr> {
-        Immutable::new(*self.as_socketaddrv4().ip())
+    pub fn ip(&self) -> Ipv4Addr {
+        *self.as_socketaddrv4().ip()
     }
 }
 #[cfg(feature = "convenient_methods")]

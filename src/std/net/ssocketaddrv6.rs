@@ -42,8 +42,8 @@ impl SSocketAddrV6 {
     pub fn as_socketaddrv6_mut<'a>(&'a mut self) -> Mutable<'a, Self, SocketAddrV6> {
         Mutable::new_from(self)
     }
-    pub fn ip<'a>(&'a self) -> Immutable<'a, Ipv6Addr> {
-        Immutable::new(*self.as_socketaddrv6().ip())
+    pub fn ip(&self) -> Ipv6Addr {
+        *self.as_socketaddrv6().ip()
     }
     pub fn new(ip: SIpv6Addr, port: u16, flowinfo: u32, scope_id: u32) -> Self {
         Self {
