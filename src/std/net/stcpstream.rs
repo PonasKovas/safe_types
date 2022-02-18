@@ -2,14 +2,14 @@ use super::SShutdown;
 use crate::std::io::SResult as SioResult;
 use crate::std::prelude::SOption;
 use crate::std::time::SDuration;
-use crate::SUnit;
 use crate::{
     std::{io::SError as SioError, net::SSocketAddr},
     SMutSlice,
 };
+use crate::{SSlice, SUnit};
 use std::fmt::Debug;
+use std::io::{Read, Write};
 use std::marker::PhantomData;
-use std::mem::ManuallyDrop;
 use std::net::{Shutdown, SocketAddr, TcpStream};
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
@@ -19,7 +19,8 @@ use std::time::Duration;
 /// See documentation of [`std::net::TcpStream`]
 #[repr(C)]
 pub struct STcpStreamRef<'a> {
-    inner: ManuallyDrop<STcpStream>,
+    ptr: *const (),
+    vtable: &'static ImmutableVTable,
     _phantom: PhantomData<&'a ()>,
 }
 
@@ -28,8 +29,8 @@ pub struct STcpStreamRef<'a> {
 /// See documentation of [`std::net::TcpStream`]
 #[repr(C)]
 pub struct STcpStreamMut<'a> {
-    inner: ManuallyDrop<STcpStream>,
-    _phantom: PhantomData<&'a ()>,
+    inner: STcpStreamRef<'a>,
+    vtable: &'static MutableVTable,
 }
 
 /// A TCP stream between a local and a remote socket.
@@ -37,12 +38,11 @@ pub struct STcpStreamMut<'a> {
 /// See documentation of [`std::net::TcpStream`]
 #[repr(C)]
 pub struct STcpStream {
-    ptr: *const (),
-    vtable: VTable,
+    inner: STcpStreamMut<'static>,
 }
 
 #[repr(C)]
-struct VTable {
+struct ImmutableVTable {
     local_addr: unsafe extern "C" fn(*const ()) -> SioResult<SSocketAddr>,
     nodelay: unsafe extern "C" fn(*const ()) -> SioResult<bool>,
     peek: unsafe extern "C" fn(*const (), SMutSlice<u8>) -> SioResult<usize>,
@@ -60,7 +60,22 @@ struct VTable {
     write_timeout: unsafe extern "C" fn(*const ()) -> SioResult<SOption<SDuration>>,
 }
 
-const VTABLE: VTable = VTable {
+#[repr(C)]
+struct MutableVTable {
+    // std::io::Read methods
+    read: unsafe extern "C" fn(*mut (), SMutSlice<u8>) -> SioResult<usize>,
+    read_vectored:
+        unsafe extern "C" fn(*mut (), SMutSlice<std::io::IoSliceMut>) -> SioResult<usize>,
+    // read_vectored is pretty much useless without is_read_vectored, which is unstable 😳
+
+    // std::io::Write methods
+    write: unsafe extern "C" fn(*mut (), SSlice<u8>) -> SioResult<usize>,
+    write_vectored: unsafe extern "C" fn(*mut (), SSlice<std::io::IoSlice>) -> SioResult<usize>,
+    flush: unsafe extern "C" fn(*mut ()) -> SioResult<SUnit>,
+    // write_vectored is pretty much useless without is_write_vectored, which is unstable 😳
+}
+
+static IMMUTABLE_VTABLE: ImmutableVTable = ImmutableVTable {
     local_addr,
     nodelay,
     peek,
@@ -77,14 +92,22 @@ const VTABLE: VTable = VTable {
     ttl,
     write_timeout,
 };
+static MUTABLE_VTABLE: MutableVTable = MutableVTable {
+    read,
+    read_vectored,
+    write,
+    write_vectored,
+    flush,
+};
 
-impl STcpStream {
-    pub fn from_tcpstream(tcp_stream: Box<TcpStream>) -> Self {
-        let ptr = Box::into_raw(tcp_stream) as *const ();
+impl<'a> STcpStreamRef<'a> {
+    pub fn from_tcpstream(tcp_stream: &'a TcpStream) -> Self {
+        let ptr = tcp_stream as *const _ as *const ();
 
         Self {
             ptr,
-            vtable: VTABLE,
+            vtable: &IMMUTABLE_VTABLE,
+            _phantom: PhantomData,
         }
     }
     pub fn local_addr(&self) -> std::io::Result<SocketAddr> {
@@ -206,52 +229,112 @@ impl STcpStream {
     }
 }
 
-impl<'a> STcpStreamRef<'a> {
-    pub fn from_tcpstream(tcp_stream: &'a TcpStream) -> Self {
-        let ptr = tcp_stream as *const _ as *const ();
-
-        Self {
-            inner: ManuallyDrop::new(STcpStream {
-                ptr,
-                vtable: VTABLE,
-            }),
-            _phantom: PhantomData,
-        }
-    }
-}
-
 impl<'a> STcpStreamMut<'a> {
     pub fn from_tcpstream(tcp_stream: &'a mut TcpStream) -> Self {
-        let ptr = tcp_stream as *const _ as *const ();
-
         Self {
-            inner: ManuallyDrop::new(STcpStream {
-                ptr,
-                vtable: VTABLE,
-            }),
-            _phantom: PhantomData,
+            inner: STcpStreamRef {
+                ptr: tcp_stream as *const _ as *const (),
+                vtable: &IMMUTABLE_VTABLE,
+                _phantom: PhantomData,
+            },
+            vtable: &MUTABLE_VTABLE,
         }
     }
 }
 
-impl<'a> Deref for STcpStreamRef<'a> {
-    type Target = STcpStream;
+impl STcpStream {
+    pub fn from_tcpstream(tcp_stream: Box<TcpStream>) -> Self {
+        let tcp_stream: &mut TcpStream = Box::leak(tcp_stream);
 
-    fn deref(&self) -> &Self::Target {
-        &*self.inner
+        Self {
+            inner: STcpStreamMut::from_tcpstream(tcp_stream),
+        }
+    }
+}
+
+impl<'a> Read for STcpStreamMut<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        unsafe {
+            (self.vtable.read)(self.inner.ptr as *mut (), buf.into())
+                .into_result()
+                .map_err(|e| e.into())
+        }
+    }
+    fn read_vectored(&mut self, bufs: &mut [std::io::IoSliceMut]) -> std::io::Result<usize> {
+        unsafe {
+            (self.vtable.read_vectored)(self.inner.ptr as *mut (), bufs.into())
+                .into_result()
+                .map_err(|e| e.into())
+        }
+    }
+}
+
+impl<'a> Write for STcpStreamMut<'a> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        unsafe {
+            (self.vtable.write)(self.inner.ptr as *mut (), buf.into())
+                .into_result()
+                .map_err(|e| e.into())
+        }
+    }
+    fn write_vectored(&mut self, bufs: &[std::io::IoSlice<'_>]) -> std::io::Result<usize> {
+        unsafe {
+            (self.vtable.write_vectored)(self.inner.ptr as *mut (), bufs.into())
+                .into_result()
+                .map_err(|e| e.into())
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        unsafe {
+            (self.vtable.flush)(self.inner.ptr as *mut ())
+                .into_result()
+                .map(|_| ())
+                .map_err(|e| e.into())
+        }
+    }
+}
+
+impl Read for STcpStream {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        self.inner.read(buf)
+    }
+    fn read_vectored(&mut self, bufs: &mut [std::io::IoSliceMut]) -> std::io::Result<usize> {
+        self.inner.read_vectored(bufs)
+    }
+}
+
+impl Write for STcpStream {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.inner.write(buf)
+    }
+    fn write_vectored(&mut self, bufs: &[std::io::IoSlice<'_>]) -> std::io::Result<usize> {
+        self.inner.write_vectored(bufs)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.inner.flush()
     }
 }
 
 impl<'a> Deref for STcpStreamMut<'a> {
-    type Target = STcpStream;
+    type Target = STcpStreamRef<'a>;
 
     fn deref(&self) -> &Self::Target {
-        &*self.inner
+        &self.inner
     }
 }
-impl<'a> DerefMut for STcpStreamMut<'a> {
+
+impl Deref for STcpStream {
+    type Target = STcpStreamMut<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+impl DerefMut for STcpStream {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.inner
+        &mut self.inner
     }
 }
 
@@ -290,16 +373,25 @@ impl<'a> From<&'a mut TcpStream> for STcpStreamMut<'a> {
 unsafe impl Send for STcpStream {}
 unsafe impl Sync for STcpStream {}
 
-// Converts &() to &TcpStream
+// Converts *const () to &TcpStream
 macro_rules! cast_ref {
     ($ptr:expr) => {
-        unsafe {
-            ($ptr as *const () as *const TcpStream)
-                .as_ref()
-                .unwrap_unchecked()
-        }
+        unsafe { ($ptr as *const TcpStream).as_ref().unwrap_unchecked() }
     };
 }
+
+// Converts *mut () to &mut TcpStream
+macro_rules! cast_mut {
+    ($ptr:expr) => {
+        unsafe { ($ptr as *mut TcpStream).as_mut().unwrap_unchecked() }
+    };
+}
+
+////////////////////////////////////
+//                                //
+// EXTERN "C" FNS IMPLEMENTATIONS //
+//                                //
+////////////////////////////////////
 
 unsafe extern "C" fn local_addr(ptr: *const ()) -> SioResult<SSocketAddr> {
     let tcp_stream: &TcpStream = cast_ref!(ptr);
@@ -442,5 +534,57 @@ unsafe extern "C" fn write_timeout(ptr: *const ()) -> SioResult<SOption<SDuratio
         .write_timeout()
         .map_err(|e| e.into())
         .map(|o| o.map(|d| d.into()).into())
+        .into()
+}
+
+unsafe extern "C" fn read(ptr: *mut (), buf: SMutSlice<u8>) -> SioResult<usize> {
+    let tcp_stream: &mut TcpStream = cast_mut!(ptr);
+
+    tcp_stream
+        .read(buf.into_slice())
+        .map_err(|e| e.into())
+        .into()
+}
+
+unsafe extern "C" fn read_vectored(
+    ptr: *mut (),
+    bufs: SMutSlice<std::io::IoSliceMut>,
+) -> SioResult<usize> {
+    let tcp_stream: &mut TcpStream = cast_mut!(ptr);
+
+    tcp_stream
+        .read_vectored(bufs.into_slice())
+        .map_err(|e| e.into())
+        .into()
+}
+
+unsafe extern "C" fn write(ptr: *mut (), buf: SSlice<u8>) -> SioResult<usize> {
+    let tcp_stream: &mut TcpStream = cast_mut!(ptr);
+
+    tcp_stream
+        .write(buf.as_slice())
+        .map_err(|e| e.into())
+        .into()
+}
+
+unsafe extern "C" fn write_vectored(
+    ptr: *mut (),
+    bufs: SSlice<std::io::IoSlice>,
+) -> SioResult<usize> {
+    let tcp_stream: &mut TcpStream = cast_mut!(ptr);
+
+    tcp_stream
+        .write_vectored(bufs.as_slice())
+        .map_err(|e| e.into())
+        .into()
+}
+
+unsafe extern "C" fn flush(ptr: *mut ()) -> SioResult<SUnit> {
+    let tcp_stream: &mut TcpStream = cast_mut!(ptr);
+
+    tcp_stream
+        .flush()
+        .map(|_| SUnit::new())
+        .map_err(|e| e.into())
         .into()
 }
