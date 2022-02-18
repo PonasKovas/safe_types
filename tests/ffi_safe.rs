@@ -41,9 +41,6 @@ fn ffi_safe() {
         _: safe_types::std::net::SSocketAddrV4,
         _: safe_types::std::net::SSocketAddrV6,
         _: safe_types::std::net::STcpStream,
-        _: safe_types::std::net::STcpStreamRef<'static>,
-        _: safe_types::std::net::STcpStreamMut<'static>,
-        _: safe_types::std::net::SShutdown,
     ) {
     }
 }

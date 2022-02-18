@@ -41,7 +41,7 @@ impl<T> SVec<T> {
     pub fn as_vec<'a>(&'a self) -> Immutable<'a, Vec<T>> {
         Immutable::new_from(self)
     }
-    pub fn as_vec_mut<'a>(&'a mut self) -> Mutable<'a, SVec<T>, Vec<T>> {
+    pub fn as_vec_mut<'a>(&'a mut self) -> Mutable<'a, Self, Vec<T>> {
         Mutable::new_from(self)
     }
 }

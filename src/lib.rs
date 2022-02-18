@@ -7,6 +7,9 @@ mod sslice;
 mod sstr;
 pub mod std;
 mod sunit;
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
+pub mod tokio;
 mod tuples;
 
 pub use refs::{Immutable, Mutable};

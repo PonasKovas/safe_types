@@ -5,9 +5,11 @@ edition = "2021"
 
 [dependencies]
 safe_types_derive = { path = "safe_types_derive/", optional = true }
+tokio = { version = "1.17", features = ["net"], optional = true }
 
 [workspace]
 
 [features]
-default = ["convenient_methods"]
+default = ["convenient_methods", "tokio"]
 convenient_methods = ["safe_types_derive"]
+tokio = ["dep:tokio"]
