@@ -14,6 +14,8 @@ use std::net::{Shutdown, SocketAddr, TcpStream};
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
+// TODO: more trait impls
+
 /// An immutable reference to a TCP stream between a local and a remote socket.
 ///
 /// See documentation of [`std::net::TcpStream`]

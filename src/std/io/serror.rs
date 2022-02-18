@@ -74,9 +74,9 @@ impl Display for SError {
             }
             SRepr::Custom { kind, error } => {
                 if let &Some(ref error) = &*error.as_option() {
-                    write!(f, "{}: {}", kind.as_errorkind(), error)
+                    write!(f, "{:?}: {}", kind.as_errorkind(), error)
                 } else {
-                    write!(f, "{}", kind.as_errorkind())
+                    write!(f, "{:?}", kind.as_errorkind())
                 }
             }
         }
@@ -91,9 +91,9 @@ impl Debug for SError {
             }
             SRepr::Custom { kind, error } => {
                 if let &Some(ref error) = &*error.as_option() {
-                    write!(f, "{}: {}", kind.as_errorkind(), error)
+                    write!(f, "{:?}: {:?}", kind.as_errorkind(), error)
                 } else {
-                    write!(f, "{}", kind.as_errorkind())
+                    write!(f, "{:?}", kind.as_errorkind())
                 }
             }
         }
