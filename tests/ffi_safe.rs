@@ -3,30 +3,30 @@
 //! This won't compile if any of the tested types are found to not be
 //! FFI-safe
 
-use repr_c_types;
+use safe_types;
 
 #[test]
 fn ffi_safe() {
     extern "C" fn _test(
         // Primitives
-        _: repr_c_types::SArray<u8, 5>,
-        _: repr_c_types::SStr<'static>,
+        _: safe_types::SUnit,
+        _: safe_types::SArray<u8, 5>,
+        _: safe_types::SStr<'static>,
         // Primitives: Tuples
-        _: repr_c_types::tuples::STuple2<u8, u8>,
+        _: safe_types::STuple2<u8, u8>,
         // std
-        _: repr_c_types::std::option::SOption<u8>,
-        _: repr_c_types::std::result::SResult<u8, u8>,
+        _: safe_types::std::option::SOption<u8>,
+        _: safe_types::std::result::SResult<u8, u8>,
         // std::sync
-        _: repr_c_types::std::sync::SArcOpaque,
+        _: safe_types::std::sync::SArcOpaque,
         // std::net
-        _: repr_c_types::std::net::SIpAddr,
-        _: repr_c_types::std::net::SIpv4Addr,
-        _: repr_c_types::std::net::SIpv6Addr,
-        _: repr_c_types::std::net::SSocketAddr,
-        _: repr_c_types::std::net::SSocketAddrV4,
-        _: repr_c_types::std::net::SSocketAddrV6,
-        _: repr_c_types::std::net::STcpStreamRef,
-        _: repr_c_types::std::net::STcpStreamOwned,
+        _: safe_types::std::net::SIpAddr,
+        _: safe_types::std::net::SIpv4Addr,
+        _: safe_types::std::net::SIpv6Addr,
+        _: safe_types::std::net::SSocketAddr,
+        _: safe_types::std::net::SSocketAddrV4,
+        _: safe_types::std::net::SSocketAddrV6,
+        _: safe_types::std::net::STcpStream,
     ) {
     }
 }

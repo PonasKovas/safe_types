@@ -1,11 +1,10 @@
 use std::io::ErrorKind;
 
-/// FFI-safe equivalent of `ErrorKind`
+/// A list specifying general categories of I/O error.
 ///
 /// See documentation of [`std::io::ErrorKind`]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 #[repr(C)]
-#[non_exhaustive]
 pub enum SErrorKind {
     NotFound,
     PermissionDenied,

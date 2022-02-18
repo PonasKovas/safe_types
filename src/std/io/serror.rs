@@ -5,6 +5,9 @@ use std::{
     io::Error,
 };
 
+/// The error type for I/O operations of the Read, Write, Seek, and associated traits.
+///
+/// See documentation of [`std::io::Error`]
 #[repr(C)]
 pub struct SError {
     repr: SRepr,
