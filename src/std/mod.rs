@@ -6,6 +6,7 @@ pub mod option;
 pub mod result;
 pub mod string;
 pub mod sync;
+pub mod task;
 pub mod time;
 pub mod vec;
 

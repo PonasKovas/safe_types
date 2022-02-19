@@ -1,3 +1,3 @@
 mod stcpstream;
 
-pub use stcpstream::STcpStream;
+pub use stcpstream::{STcpStream, STcpStreamMut, STcpStreamRef};

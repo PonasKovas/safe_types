@@ -1,7 +1,8 @@
 use crate::{Immutable, Mutable};
 use std::fmt::Debug;
 use std::io::{Read, Write};
-use std::net::TcpStream;
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
+use std::time::Duration;
 
 #[cfg(feature = "convenient_methods")]
 use safe_types_derive::impl_methods;
@@ -43,6 +44,13 @@ impl STcpStream {
     }
     pub fn as_tcpstream_mut<'a>(&'a mut self) -> Mutable<'a, Self, TcpStream> {
         Mutable::new_from(self)
+    }
+
+    pub fn connect<A: ToSocketAddrs>(addr: A) -> std::io::Result<Self> {
+        TcpStream::connect(addr).map(|s| s.into())
+    }
+    pub fn connect_timeout(addr: &SocketAddr, timeout: Duration) -> std::io::Result<Self> {
+        TcpStream::connect_timeout(addr, timeout).map(|s| s.into())
     }
 }
 
