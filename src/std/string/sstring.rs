@@ -28,6 +28,10 @@ impl SString {
     pub fn as_string_mut<'a>(&'a mut self) -> Mutable<'a, Self, String> {
         Mutable::new_from(self)
     }
+
+    pub fn from_utf8(vec: SVec<u8>) -> Result<Self, std::string::FromUtf8Error> {
+        String::from_utf8(vec.into_vec()).map(|s| Self::from_string(s))
+    }
     pub fn as_bytes<'a>(&'a self) -> &'a [u8] {
         self.inner.as_slice()
     }
