@@ -28,7 +28,10 @@ impl SString {
     pub fn as_string_mut<'a>(&'a mut self) -> Mutable<'a, Self, String> {
         Mutable::new_from(self)
     }
-    // TODO: as_bytes, as_mut_str, as_mut_vec, as_str
+    pub fn as_bytes<'a>(&'a self) -> &'a [u8] {
+        self.inner.as_slice()
+    }
+    // TODO: as_mut_str, as_mut_vec, as_str
 }
 
 #[cfg(feature = "convenient_methods")]
@@ -86,6 +89,11 @@ impl Debug for SString {
 impl PartialEq for SString {
     fn eq(&self, other: &Self) -> bool {
         PartialEq::eq(&*self.as_string(), &*other.as_string())
+    }
+}
+impl PartialEq<str> for SString {
+    fn eq(&self, other: &str) -> bool {
+        PartialEq::eq(&*self.as_string(), other)
     }
 }
 

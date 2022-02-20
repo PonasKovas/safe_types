@@ -159,3 +159,13 @@ impl<T> IndexMut<usize> for SVec<T> {
         &mut self.as_mut_slice()[index]
     }
 }
+
+impl<'a, T> IntoIterator for &'a SVec<T> {
+    type Item = &'a T;
+
+    type IntoIter = std::slice::Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.as_slice().into_iter()
+    }
+}
