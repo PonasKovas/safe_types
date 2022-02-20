@@ -1,5 +1,5 @@
 use super::SIpv4Addr;
-use crate::{Immutable, Mutable};
+use crate::{Mutable};
 use std::{
     fmt::Display,
     net::{Ipv4Addr, SocketAddrV4, ToSocketAddrs},

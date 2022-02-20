@@ -1,5 +1,5 @@
 use super::result::SResult;
-use crate::{tuples::STuple2, Immutable, Mutable};
+use crate::{Immutable, Mutable};
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "convenient_methods")]

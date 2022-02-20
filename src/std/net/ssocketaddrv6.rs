@@ -1,4 +1,4 @@
-use crate::{Immutable, Mutable};
+use crate::{Mutable};
 
 use super::SIpv6Addr;
 use std::{

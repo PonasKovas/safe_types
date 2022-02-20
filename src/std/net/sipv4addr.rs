@@ -1,4 +1,4 @@
-use super::{SIpAddr, SIpv6Addr};
+use super::{SIpAddr};
 use std::{
     fmt::Display,
     net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr},
