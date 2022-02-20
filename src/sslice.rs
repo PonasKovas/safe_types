@@ -1,4 +1,3 @@
-use crate::PhantomType;
 use std::{
     marker::PhantomData,
     ops::{Deref, DerefMut, Index, IndexMut},
@@ -7,27 +6,27 @@ use std::{
 /// FFI-safe equivalent of `&[T]`
 ///
 /// See documentation of [`slice`]
+///
+/// *Note: due to rust's limitations, using this type will never trigger
+/// the `improper_ctypes_definitions` lint, see https://github.com/rust-lang/rust/issues/94000 *
 #[derive(Clone)]
 #[repr(C)]
 pub struct SSlice<'a, T> {
     ptr: *const T,
     length: usize,
-    // So the compiler would trigger the improper_ctypes_definitions lint
-    // if T is not FFI-safe
-    _phantom_t: PhantomType<T>,
     _phantom_d: PhantomData<&'a T>,
 }
 
 /// FFI-safe equivalent of `&mut [T]`
 ///
 /// See documentation of [`slice`]
+///
+/// *Note: due to rust's limitations, using this type will never trigger
+/// the `improper_ctypes_definitions` lint, see https://github.com/rust-lang/rust/issues/94000 *
 #[repr(C)]
 pub struct SMutSlice<'a, T> {
     ptr: *mut T,
     length: usize,
-    // So the compiler would trigger the improper_ctypes_definitions lint
-    // if T is not FFI-safe
-    _phantom_t: PhantomType<T>,
     _phantom_d: PhantomData<&'a T>,
 }
 
@@ -36,7 +35,6 @@ impl<'a, T> SSlice<'a, T> {
         Self {
             ptr: unsafe { slice.as_ptr().as_ref().unwrap_unchecked() },
             length: slice.len(),
-            _phantom_t: PhantomType::new(),
             _phantom_d: PhantomData,
         }
     }
@@ -58,7 +56,6 @@ impl<'a, T> SMutSlice<'a, T> {
         Self {
             ptr: slice.as_mut_ptr(),
             length: slice.len(),
-            _phantom_t: PhantomType::new(),
             _phantom_d: PhantomData,
         }
     }

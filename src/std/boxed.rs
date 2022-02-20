@@ -1,18 +1,20 @@
-use crate::{Immutable, Mutable, PhantomType};
+use crate::{Immutable, Mutable};
 
+/// A pointer type for heap allocation.
+///
+/// See documentation of [`std::boxed::Box`]
+///
+/// *Note: due to rust's limitations, using this type will never trigger
+/// the `improper_ctypes_definitions` lint, see https://github.com/rust-lang/rust/issues/94000 *
 #[repr(C)]
 pub struct SBox<T> {
     ptr: *mut T,
-    // Used so the compiler would trigger the improper_ctypes_definitions lint
-    // if T is not FFI-safe
-    _phantom: PhantomType<T>,
 }
 
 impl<T> SBox<T> {
     pub fn from_box(b: Box<T>) -> Self {
         Self {
             ptr: Box::into_raw(b),
-            _phantom: PhantomType::new(),
         }
     }
     pub fn into_box(self) -> Box<T> {

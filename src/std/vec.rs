@@ -1,6 +1,10 @@
-use crate::{Immutable, Mutable, PhantomType};
+use crate::{Immutable, Mutable};
 use core::slice;
-use std::mem::forget;
+use std::{
+    fmt::Debug,
+    mem::forget,
+    ops::{Index, IndexMut},
+};
 
 #[cfg(feature = "convenient_methods")]
 use safe_types_derive::impl_methods;
@@ -8,14 +12,14 @@ use safe_types_derive::impl_methods;
 /// FFI-safe equivalent of `Vec<T>`
 ///
 /// See documentation of [`std::vec::Vec`]
+///
+/// *Note: due to rust's limitations, using this type will never trigger
+/// the `improper_ctypes_definitions` lint, see https://github.com/rust-lang/rust/issues/94000 *
 #[repr(C)]
 pub struct SVec<T> {
     ptr: *mut T,
     length: usize,
     capacity: usize,
-    // So the compiler would trigger the improper_ctypes_definitions lint
-    // if T is not FFI-safe
-    _phantom: PhantomType<T>,
 }
 
 impl<T> SVec<T> {
@@ -24,7 +28,6 @@ impl<T> SVec<T> {
             ptr: v.as_mut_ptr(),
             length: v.len(),
             capacity: v.capacity(),
-            _phantom: PhantomType::new(),
         };
 
         forget(v);
@@ -124,3 +127,35 @@ impl<T> From<SVec<T>> for Vec<T> {
 
 unsafe impl<T> Send for SVec<T> {}
 unsafe impl<T> Sync for SVec<T> {}
+
+impl<T: Debug> Debug for SVec<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&*self.as_vec(), f)
+    }
+}
+
+impl<T: Clone> Clone for SVec<T> {
+    fn clone(&self) -> Self {
+        (*self.as_vec()).clone().into()
+    }
+}
+
+impl<T: PartialEq> PartialEq for SVec<T> {
+    fn eq(&self, other: &Self) -> bool {
+        PartialEq::eq(&*self.as_vec(), &*other.as_vec())
+    }
+}
+
+impl<T> Index<usize> for SVec<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.as_slice()[index]
+    }
+}
+
+impl<T> IndexMut<usize> for SVec<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.as_mut_slice()[index]
+    }
+}

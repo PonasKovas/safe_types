@@ -83,4 +83,16 @@ impl Debug for SString {
     }
 }
 
+impl PartialEq for SString {
+    fn eq(&self, other: &Self) -> bool {
+        PartialEq::eq(&*self.as_string(), &*other.as_string())
+    }
+}
+
+impl Clone for SString {
+    fn clone(&self) -> Self {
+        (&*self.as_string()).clone().into()
+    }
+}
+
 // TODO traits
