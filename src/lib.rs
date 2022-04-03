@@ -11,7 +11,7 @@ mod tuples;
 pub use refs::{Immutable, Mutable};
 pub use sarray::SArray;
 pub use sslice::{SMutSlice, SSlice};
-pub use sstr::{SMutStr, SStr};
+pub use sstr::{SMutStr, SRawStr, SStr};
 pub use sunit::SUnit;
 pub use tuples::*;
 

@@ -1,6 +1,12 @@
-use std::fmt::{Debug, Display};
+use std::{
+    borrow::{Borrow, BorrowMut},
+    fmt::{Debug, Display},
+    ops::{Deref, DerefMut},
+};
 
-use crate::{std::prelude::SVec, Immutable, Mutable};
+use crate::{
+    sstr::SRawStr, std::prelude::SVec, Immutable, Mutable, SMutSlice, SMutStr, SSlice, SStr,
+};
 
 #[cfg(feature = "convenient_methods")]
 use safe_types_derive::impl_methods;
@@ -22,6 +28,16 @@ impl SString {
     pub fn into_string(self) -> String {
         unsafe { String::from_utf8_unchecked(self.inner.into_vec()) }
     }
+    pub fn as_str<'a>(&'a self) -> SStr<'a> {
+        SStr {
+            inner: SSlice::from_slice(self.inner.as_slice()),
+        }
+    }
+    pub fn as_mut_str<'a>(&'a mut self) -> SMutStr<'a> {
+        SMutStr {
+            inner: SMutSlice::from_slice(self.inner.as_mut_slice()),
+        }
+    }
     pub fn as_string<'a>(&'a self) -> Immutable<'a, String> {
         Immutable::new_from(self)
     }
@@ -35,7 +51,7 @@ impl SString {
     pub fn as_bytes<'a>(&'a self) -> &'a [u8] {
         self.inner.as_slice()
     }
-    // TODO: as_mut_str, as_mut_vec, as_str
+    // TODO: as_mut_str, as_mut_vec
 }
 
 #[cfg(feature = "convenient_methods")]
@@ -104,6 +120,43 @@ impl PartialEq<str> for SString {
 impl Clone for SString {
     fn clone(&self) -> Self {
         (&*self.as_string()).clone().into()
+    }
+}
+
+impl Borrow<SRawStr> for SString {
+    fn borrow(&self) -> &SRawStr {
+        SRawStr::from_str(self.as_str().into_str())
+    }
+}
+
+impl BorrowMut<SRawStr> for SString {
+    fn borrow_mut(&mut self) -> &mut SRawStr {
+        SRawStr::from_mut_str(self.as_mut_str().into_str())
+    }
+}
+
+impl Borrow<str> for SString {
+    fn borrow(&self) -> &str {
+        self.as_str().into_str()
+    }
+}
+
+impl BorrowMut<str> for SString {
+    fn borrow_mut(&mut self) -> &mut str {
+        self.as_mut_str().into_str()
+    }
+}
+
+impl Deref for SString {
+    type Target = SRawStr;
+
+    fn deref(&self) -> &Self::Target {
+        SRawStr::from_str(self.as_str().into_str())
+    }
+}
+impl DerefMut for SString {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        SRawStr::from_mut_str(self.as_mut_str().into_str())
     }
 }
 

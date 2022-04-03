@@ -45,6 +45,8 @@ fn ffi_safe() {
         // std::task
         _: safe_types::std::task::SContext,
         _: safe_types::std::task::SPoll<u8>,
+        // std::borrow
+        _: safe_types::std::borrow::SCow<safe_types::SStr<'static>>,
     ) {
     }
 }
