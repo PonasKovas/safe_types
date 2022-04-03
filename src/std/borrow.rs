@@ -1,5 +1,8 @@
 use crate::{Immutable, Mutable};
-use std::{borrow::Cow, ops::Deref};
+use std::{
+    borrow::{Borrow, Cow},
+    ops::Deref,
+};
 
 /// A clone-on-write smart pointer.
 ///
@@ -74,22 +77,29 @@ where
     }
 }
 
-// impl<'a, B: 'a + ToOwned + ?Sized> Clone for SCow<'a, B> {
-//     fn clone(&self) -> Self {
-//         self.as_cow().clone().into()
-//     }
-// }
+impl<'a, B: 'a + Deref> Clone for SCow<B>
+where
+    <B as Deref>::Target: ToOwned,
+    B: Into<&'a <B as Deref>::Target>,
+    &'a <B as Deref>::Target: Into<B>,
+{
+    fn clone(&self) -> Self {
+        self.as_cow().clone().into()
+    }
+}
 
-// impl<'a, B: 'a + ToOwned + ?Sized> Deref for SCow<'a, B>
-// where
-//     <B as ToOwned>::Owned: Borrow<B>,
-// {
-//     type Target = B;
+impl<'a, B: 'a + Deref> Deref for SCow<B>
+where
+    <B as Deref>::Target: ToOwned,
+    B: Into<&'a <B as Deref>::Target>,
+    &'a <B as Deref>::Target: Into<B>,
+{
+    type Target = <B as Deref>::Target;
 
-//     fn deref(&self) -> &Self::Target {
-//         match self {
-//             Self::Borrowed(r) => r,
-//             Self::Owned(ref o) => o.borrow(),
-//         }
-//     }
-// }
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Borrowed(r) => r,
+            Self::Owned(o) => o.borrow(),
+        }
+    }
+}
